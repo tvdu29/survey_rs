@@ -18,12 +18,12 @@ pub fn ask_multiselect<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Resu
         .map(|x| (false, x))
         .collect();
 
-    write!(
-        stdout,
-        "{}{}",
-        termion::clear::All,
-        termion::cursor::Goto(1, 1)
-    )?;
+    // write!(
+    //     stdout,
+    //     "{}{}",
+    //     termion::clear::All,
+    //     termion::cursor::Goto(1, 1)
+    // )?;
     write!(
         stdout,
         "{}? {}{}\n\r",
@@ -31,11 +31,19 @@ pub fn ask_multiselect<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Resu
         termion::style::Reset,
         message
     )?;
-    let (_, pad) = stdout.cursor_pos()?;
+    let pad = {
+        let cursor = stdout.cursor_pos()?;
+        let size = terminal_size()?;
+        match (cursor.1 as usize) < (size.1 as usize + 1) - &answers.len() {
+            true => cursor.1 as usize,
+            false => (size.1 as usize + 1) - &answers.len(),
+        }
+    };
+
     for line in &answers {
         write!(
             stdout,
-            "{}[{}] {}{}\n\r",
+            "{}[{}] {}{}{}",
             if line.0 {
                 color::LightGreen.fg_str()
             } else {
@@ -43,19 +51,20 @@ pub fn ask_multiselect<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Resu
             },
             if line.0 { 'x' } else { ' ' },
             termion::style::Reset,
-            line.1
+            line.1,
+            if answers.iter().position(|x| x == line).unwrap() < answers.len() - 1 {"\n\r"} else {""},
         )?;
     }
 
-    write!(stdout, "{}", termion::cursor::Goto(2, (pad).try_into()?))?;
+    write!(stdout, "{}", termion::cursor::Goto(2, pad.try_into().unwrap()))?;
     stdout.flush()?;
 
     for c in stdin.keys() {
         match c? {
             Key::Char('q') => break,
-            Key::Up => move_up(&mut stdout, &pad),
-            Key::Down => move_down(&mut stdout, &answers, &pad),
-            Key::Char('\n') => check(&mut stdout, &mut answers, &pad),
+            Key::Up => move_up(&mut stdout, &pad.try_into().unwrap()),
+            Key::Down => move_down(&mut stdout, &answers, &pad.try_into().unwrap()),
+            Key::Char('\n') => check(&mut stdout, &mut answers, &pad.try_into().unwrap()),
             _ => continue,
         };
         stdout.flush()?;
