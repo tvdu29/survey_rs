@@ -8,6 +8,11 @@ use termion::{
     terminal_size,
 };
 
+struct Multiselect<'a> {
+    prompt: &'a str,
+    options: Vec<&'a str>,
+}
+
 pub fn ask_multiselect<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Result<&'a Vec<&'a str>, Box<dyn Error>> {
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode()?;
@@ -18,12 +23,6 @@ pub fn ask_multiselect<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Resu
         .map(|x| (false, x))
         .collect();
 
-    // write!(
-    //     stdout,
-    //     "{}{}",
-    //     termion::clear::All,
-    //     termion::cursor::Goto(1, 1)
-    // )?;
     write!(
         stdout,
         "{}? {}{}\n\r",

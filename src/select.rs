@@ -1,4 +1,8 @@
-use std::{convert::TryInto, error::Error, io::{stdin, stdout, Stdout, Write}};
+use std::{
+    convert::TryInto,
+    error::Error,
+    io::{stdin, stdout, Stdout, Write},
+};
 use termion::{
     color,
     cursor::{self, DetectCursorPos},
@@ -8,7 +12,10 @@ use termion::{
     terminal_size,
 };
 
-pub fn ask_select<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Result<&'a str, Box<dyn Error>> {
+pub fn ask_select<'a>(
+    message: &'a str,
+    options: &'a mut Vec<&str>,
+) -> Result<&'a str, Box<dyn Error>> {
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode()?;
 
@@ -50,8 +57,8 @@ pub fn ask_select<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Result<&'
             Key::Char('\n') => {
                 let cursor = stdout.cursor_pos()?;
                 ret = options[(cursor.1 - pad) as usize];
-                break
-            },
+                break;
+            }
             _ => continue,
         };
         stdout.flush()?;
@@ -66,8 +73,22 @@ pub fn ask_select<'a>(message: &'a str, options: &'a mut Vec<&str>) -> Result<&'
 fn move_up(stdout: &mut RawTerminal<Stdout>, data: &Vec<&str>, pad: &u16) {
     let cursor = stdout.cursor_pos().unwrap();
     if cursor.1 > *pad {
-        write!(stdout, "{}  {}", cursor::Goto(1, cursor.1), data[(cursor.1 - pad) as usize]).unwrap();
-        write!(stdout, "{}{}> {}{}", cursor::Goto(1, cursor.1 - 1), color::LightBlue.fg_str(), termion::style::Reset, data[(cursor.1 - pad) as usize - 1]).unwrap();
+        write!(
+            stdout,
+            "{}  {}",
+            cursor::Goto(1, cursor.1),
+            data[(cursor.1 - pad) as usize]
+        )
+        .unwrap();
+        write!(
+            stdout,
+            "{}{}> {}{}",
+            cursor::Goto(1, cursor.1 - 1),
+            color::LightBlue.fg_str(),
+            termion::style::Reset,
+            data[(cursor.1 - pad) as usize - 1]
+        )
+        .unwrap();
         stdout.flush().unwrap();
     };
 }
@@ -76,8 +97,22 @@ fn move_down(stdout: &mut RawTerminal<Stdout>, data: &Vec<&str>, pad: &u16) {
     let size = terminal_size().unwrap();
     let cursor = stdout.cursor_pos().unwrap();
     if cursor.1 - pad + 1 < data.len() as u16 && cursor.1 < size.1 {
-        write!(stdout, "{}  {}", cursor::Goto(1, cursor.1), data[(cursor.1 - pad) as usize]).unwrap();
-        write!(stdout, "{}{}> {}{}", cursor::Goto(1, cursor.1 + 1), color::LightBlue.fg_str(), termion::style::Reset, data[(cursor.1 - pad) as usize + 1]).unwrap();
+        write!(
+            stdout,
+            "{}  {}",
+            cursor::Goto(1, cursor.1),
+            data[(cursor.1 - pad) as usize]
+        )
+        .unwrap();
+        write!(
+            stdout,
+            "{}{}> {}{}",
+            cursor::Goto(1, cursor.1 + 1),
+            color::LightBlue.fg_str(),
+            termion::style::Reset,
+            data[(cursor.1 - pad) as usize + 1]
+        )
+        .unwrap();
         stdout.flush().unwrap();
     };
 }
